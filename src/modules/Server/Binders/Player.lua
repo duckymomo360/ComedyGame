@@ -21,7 +21,7 @@ local function GetAnimatorForRig(rig: Model)
 	local robloxScripts = game:GetService("ReplicatedStorage"):WaitForChild("RobloxScripts")
 	local animator: Script
 
-	if (rig.Humanoid.RigType == Enum.HumanoidRigType.R15) then
+	if rig.Humanoid.RigType == Enum.HumanoidRigType.R15 then
 		animator = robloxScripts.AnimateR15
 	else
 		animator = robloxScripts.AnimateR6
@@ -38,12 +38,22 @@ local function GetUnoccupiedSeats()
 	local seats = {}
 
 	for _, v in workspace.Tables:GetDescendants() do
-		if (v:IsA("Seat") and v:GetAttribute("Reserved") ~= true) then
+		if v:IsA("Seat") and v:GetAttribute("Reserved") ~= true then
 			table.insert(seats, v)
 		end
 	end
 	
 	return seats
+end
+
+local function GetHumanoidModelForPlayer(player: Player)
+	local success, result = pcall(Players.CreateHumanoidModelFromUserId, Players, player.UserId)
+
+	if success then
+		return result
+	else
+		return Players:CreateHumanoidModelFromUserId(1)
+	end
 end
 
 local Player = {}
@@ -56,7 +66,7 @@ function Player.new(player: Player)
 	self.Random = Random.new()
 
 	-- Create character
-	self.Character = Players:CreateHumanoidModelFromUserId(player.UserId)
+	self.Character = GetHumanoidModelForPlayer(player)
 	self.Character.Name = player.Name
 	self.Character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	
@@ -104,10 +114,12 @@ function Player:PromisePathfindTo(finish: Vector3)
 		self.Character.HumanoidRootPart.Position,
 		finish
 	):Then(function(path)
-		if (path.Status ~= Enum.PathStatus.Success) then
+		if path.Status ~= Enum.PathStatus.Success then
 			return Promise.rejected(path.Status)
 		end
 		
+		self.Character.Humanoid.Sit = false
+
 		for _, waypoint: PathWaypoint in path:GetWaypoints() do
 			self.Character.Humanoid:MoveTo(waypoint.Position)
 			self.Character.Humanoid.MoveToFinished:Wait()
@@ -129,7 +141,10 @@ function Player:EnterStage()
 end
 
 function Player:Destroy()
-	self.Character:Destroy()
+	self:PromisePathfindTo(workspace.Positions.Spawn.Position):Finally(function()
+		self.Character:Destroy()
+	end)
+
 	self.Seat:SetAttribute("Reserved", nil)
 end
 
