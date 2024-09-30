@@ -1,0 +1,26 @@
+{
+  "name": "comedygame",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+    "Roblox",
+    "Nevermore",
+    "Lua"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@quenty/binder": "^14.8.0",
+    "@quenty/clienttranslator": "^14.8.0",
+    "@quenty/cmdrservice": "^13.9.0",
+    "@quenty/loader": "^10.5.0",
+    "@quenty/maid": "^3.3.0",
+    "@quenty/pathfindingutils": "^10.5.0",
+    "@quenty/playerbinder": "^14.8.0",
+    "@quenty/promise": "^10.5.0",
+    "@quenty/ragdoll": "^15.10.0",
+    "@quenty/servicebag": "^11.7.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
