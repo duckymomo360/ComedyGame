@@ -10,6 +10,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@quenty/binder": "^14.8.0",
+    "@quenty/camera": "^14.9.0",
     "@quenty/clienttranslator": "^14.8.0",
     "@quenty/cmdrservice": "^13.9.0",
     "@quenty/loader": "^10.5.0",
