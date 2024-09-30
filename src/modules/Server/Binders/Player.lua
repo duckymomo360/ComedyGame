@@ -2,6 +2,7 @@ local require = require(script.Parent.loader).load(script)
 
 local Players = game:GetService("Players")
 local PathfindingService = game:GetService("PathfindingService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
 
 local Promise = require("Promise")
@@ -17,23 +18,6 @@ local PATH_CONFIG = {
 	},
 }
 
-local function GetAnimatorForRig(rig: Model)
-	local robloxScripts = game:GetService("ReplicatedStorage"):WaitForChild("RobloxScripts")
-	local animator: Script
-
-	if rig.Humanoid.RigType == Enum.HumanoidRigType.R15 then
-		animator = robloxScripts.AnimateR15
-	else
-		animator = robloxScripts.AnimateR6
-	end
-
-	animator = animator:Clone()
-	animator.Name = "Animator"
-	animator.Disabled = false
-
-	return animator
-end
-
 local function GetUnoccupiedSeats()
 	local seats = {}
 
@@ -47,13 +31,27 @@ local function GetUnoccupiedSeats()
 end
 
 local function GetHumanoidModelForPlayer(player: Player)
-	local success, result = pcall(Players.CreateHumanoidModelFromUserId, Players, player.UserId)
+	local success, rig = pcall(Players.CreateHumanoidModelFromUserId, Players, player.UserId)
 
-	if success then
-		return result
-	else
-		return Players:CreateHumanoidModelFromUserId(1)
+	if not success then
+		rig = Players:CreateHumanoidModelFromUserId(1)
 	end
+
+	-- Swap Animate script for Client RunContext one
+	local oldAnimate = rig:FindFirstChild("Animate")
+	local newAnimate = ReplicatedStorage.AnimateScripts[rig.Humanoid.RigType.Name]:Clone()
+
+	for _, v in oldAnimate:GetChildren() do
+		v.Parent = newAnimate
+	end
+
+	oldAnimate:Destroy()
+
+	newAnimate.Name = "Animate"
+	newAnimate.Enabled = true
+	newAnimate.Parent = rig
+
+	return rig
 end
 
 local Player = {}
@@ -69,11 +67,7 @@ function Player.new(player: Player)
 	self.Character = GetHumanoidModelForPlayer(player)
 	self.Character.Name = player.Name
 	self.Character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-	
-	-- Animate
-	self.Animator = GetAnimatorForRig(self.Character)
-	self.Animator.Parent = self.Character
-	
+
 	-- ForceField
 	local forceField = Instance.new("ForceField")
 	forceField.Visible = false
@@ -98,6 +92,7 @@ function Player.new(player: Player)
 	
 	-- Spawn character
 	self.Character.Parent = workspace.Characters
+	self.Character.HumanoidRootPart:SetNetworkOwner(nil)
 	self.Character:PivotTo(workspace.Positions.Spawn.CFrame)
 	
 	-- Walk to seat
