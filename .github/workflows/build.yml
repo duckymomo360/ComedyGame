@@ -72,14 +72,14 @@ jobs:
         uses: actions/cache@v3.3.0
         with:
           path: Packages
-          key: tools-${{ hashFiles('wally.toml') }}
+          key: wally-${{ hashFiles('wally.toml') }}
       - name: Install npm modules
         run: npm install
       - name: Cache npm modules
         uses: actions/cache@v3.3.0
         with:
           path: node_modules
-          key: tools-${{ hashFiles('package.json') }}
+          key: npm-${{ hashFiles('package.json') }}
   
   luau-tests:
     name: Run Luau tests via Open Cloud
@@ -100,12 +100,12 @@ jobs:
         uses: actions/cache@v3.3.0
         with:
           path: Packages
-          key: tools-${{ hashFiles('wally.toml') }}
+          key: wally-${{ hashFiles('wally.toml') }}
       - name: Restore cached npm modules
         uses: actions/cache@v3.3.0
         with:
           path: node_modules
-          key: tools-${{ hashFiles('package.json') }}
+          key: npm-${{ hashFiles('package.json') }}
 
       - name: Run tests
         run: /bin/sh ./scripts/shell/test.sh default.project.json $TEST_TASK_FILE
