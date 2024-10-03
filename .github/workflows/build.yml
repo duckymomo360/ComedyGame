@@ -1,24 +1,78 @@
-name: build
-on: [push]
+name: CI checks
+
+on:
+  pull_request:
+    branches: main
+  push:
+    branches: main
+
 jobs:
-  lint:
+  install-tools:
+    name: Install tools
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
+      - name: Checkout code
+        uses: actions/checkout@v3.3.0
       - name: Setup Aftman
-        uses: ok-nick/setup-aftman@v0.3.0
+        uses: ok-nick/setup-aftman@v0.4.2
         with:
-          version: 'v0.2.7'
+          version: 'v0.3.0'
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cache Aftman tools
+        uses: actions/cache@v3.3.0
+        with:
+          path: ~/.aftman
+          key: tools-${{ hashFiles('aftman.toml') }}
 
-      - name: Generate standard library
-        run: selene generate-roblox-std
+  linting:
+    name: Lint with Selene
+    runs-on: ubuntu-latest
+    needs: [install-tools]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3.3.0
+      - name: Restore Aftman tools
+        uses: actions/cache@v3.3.0
+        with:
+          path: ~/.aftman
+          key: tools-${{ hashFiles('aftman.toml') }}
+      - name: Lint
+        run: /bin/sh ./scripts/shell/lint.sh src
 
-      - name: Run Selene
-        run: selene src
+  formatting:
+    name: Format with StyLua
+    runs-on: ubuntu-latest
+    needs: [install-tools]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3.3.0
+      - name: Restore Aftman tools
+        uses: actions/cache@v3.3.0
+        with:
+          path: ~/.aftman
+          key: tools-${{ hashFiles('aftman.toml') }}
+      - name: Check format
+        run: /bin/sh ./scripts/shell/check-format.sh src
 
-      - name: Run moonwave-extractor
-        if: success() || failure()
-        run: moonwave-extractor extract src
+  luau-tests:
+    name: Run Luau tests via Open Cloud
+    runs-on: ubuntu-latest
+    needs: [install-tools]
+    concurrency:
+      group: luau-execution
+      cancel-in-progress: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3.3.0
+      - name: Restore cached aftman tools
+        uses: actions/cache@v3.3.0
+        with:
+          path: ~/.aftman
+          key: tools-${{ hashFiles('aftman.toml') }}
+      - name: Run tests
+        run: /bin/sh ./scripts/shell/test.sh default.project.json $TEST_TASK_FILE
+        env:
+          ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
+          ROBLOX_UNIVERSE_ID: ${{ vars.ROBLOX_TEST_UNIVERSE_ID }}
+          ROBLOX_PLACE_ID: ${{ vars.ROBLOX_TEST_PLACE_ID }}
+          TEST_TASK_FILE: tasks/runTests.lua
