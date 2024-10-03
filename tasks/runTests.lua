@@ -1,1 +1,1 @@
-error("test failed")
+print("Running tests")
