@@ -2,8 +2,10 @@
 
 std = "roblox"
 
+exclude = ["Packages/*", "DevPackages/*", "node_modules/*", "*.spec.lua"]
+
 [lints]
 
 
 [config]
-exclude = ["Packages/*", "DevPackages/*", "node_modules/*", "*.spec.lua"]
+
