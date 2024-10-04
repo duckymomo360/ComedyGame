@@ -4,8 +4,6 @@
 
 local require = require(script.Parent.loader).load(script)
 
-local Maid = require("Maid")
-
 local ComedyGameServiceClient = {}
 ComedyGameServiceClient.ServiceName = "ComedyGameServiceClient"
 
@@ -14,6 +12,9 @@ function ComedyGameServiceClient:Init(serviceBag)
 	self._serviceBag = assert(serviceBag, "No serviceBag")
 
 	self._serviceBag:GetService(require("CameraService"))
+	self._serviceBag:GetService(require("SoundboardButton"))
+
+	game:GetService("StarterGui").MainGui:Clone().Parent = game.Players.LocalPlayer.PlayerGui
 end
 
 return ComedyGameServiceClient

@@ -4,8 +4,6 @@
 
 local require = require(script.Parent.loader).load(script)
 
-local RunService = game:GetService("RunService")
-
 local CameraState = require("CameraState")
 local SummedCamera = require("SummedCamera")
 local Maid = require("Maid")

@@ -26,7 +26,7 @@ local function GetUnoccupiedSeats()
 			table.insert(seats, v)
 		end
 	end
-	
+
 	return seats
 end
 
@@ -59,7 +59,7 @@ Player.__index = Player
 
 function Player.new(player: Player)
 	local self = setmetatable({}, Player)
-	
+
 	self.Player = player
 	self.Random = Random.new()
 
@@ -72,10 +72,10 @@ function Player.new(player: Player)
 	local forceField = Instance.new("ForceField")
 	forceField.Visible = false
 	forceField.Parent = self.Character
-	
+
 	-- Path
 	self.Path = PathfindingService:CreatePath(PATH_CONFIG)
-	
+
 	-- Voice
 	self.VoiceInput = Instance.new("AudioDeviceInput")
 	self.VoiceInput.Player = player
@@ -84,17 +84,17 @@ function Player.new(player: Player)
 	self.AudioWire = Instance.new("Wire")
 	self.AudioWire.SourceInstance = self.VoiceInput
 	self.AudioWire.Parent = player
-	
+
 	-- Find & reserve a seat
 	local seats = GetUnoccupiedSeats()
 	self.Seat = seats[self.Random:NextInteger(1, #seats)]
 	self.Seat:SetAttribute("Reserved", true)
-	
+
 	-- Spawn character
 	self.Character.Parent = workspace.Characters
 	self.Character.HumanoidRootPart:SetNetworkOwner(nil)
 	self.Character:PivotTo(workspace.Positions.Spawn.CFrame)
-	
+
 	-- Walk to seat
 	self:PromisePathfindTo(self.Seat.Position):Finally(function()
 		self:EnterSeat()
@@ -104,24 +104,21 @@ function Player.new(player: Player)
 end
 
 function Player:PromisePathfindTo(finish: Vector3)
-	return PathfindingUtils.promiseComputeAsync(
-		self.Path,
-		self.Character.HumanoidRootPart.Position,
-		finish
-	):Then(function(path)
-		if path.Status ~= Enum.PathStatus.Success then
-			return Promise.rejected(path.Status)
-		end
-		
-		self.Character.Humanoid.Sit = false
+	return PathfindingUtils.promiseComputeAsync(self.Path, self.Character.HumanoidRootPart.Position, finish)
+		:Then(function(path)
+			if path.Status ~= Enum.PathStatus.Success then
+				return Promise.rejected(path.Status)
+			end
 
-		for _, waypoint: PathWaypoint in path:GetWaypoints() do
-			self.Character.Humanoid:MoveTo(waypoint.Position)
-			self.Character.Humanoid.MoveToFinished:Wait()
-		end
+			self.Character.Humanoid.Sit = false
 
-		return Promise.resolved(path.Status)
-	end)
+			for _, waypoint: PathWaypoint in path:GetWaypoints() do
+				self.Character.Humanoid:MoveTo(waypoint.Position)
+				self.Character.Humanoid.MoveToFinished:Wait()
+			end
+
+			return Promise.resolved(path.Status)
+		end)
 end
 
 function Player:EnterSeat()
