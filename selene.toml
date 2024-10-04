@@ -6,4 +6,4 @@ std = "roblox"
 
 
 [config]
-exclude = ["Packages/*", "DevPackages/*", "node_modules/*"]
+exclude = ["Packages/*", "DevPackages/*", "node_modules/*", "*.spec.lua"]
