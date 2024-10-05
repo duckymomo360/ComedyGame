@@ -14,7 +14,7 @@ function ComedyGameService:Init(serviceBag)
 	self._serviceBag = assert(serviceBag, "No serviceBag")
 	self._maid = Maid.new()
 
-	self._serviceBag:GetService(require("Player"))
+	self._serviceBag:GetService(require("ServerBinders"))
 end
 
 function ComedyGameService:Destroy()
