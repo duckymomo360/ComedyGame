@@ -1,12 +1,11 @@
 local require = require(script.Parent.loader).load(script)
 
-local Players = game:GetService("Players")
 local PathfindingService = game:GetService("PathfindingService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
 
 local Promise = require("Promise")
 local PathfindingUtils = require("PathfindingUtils")
+local AvatarUtils = require("AvatarUtils")
 
 local PATH_CONFIG = {
 	AgentCanJump = false,
@@ -30,73 +29,49 @@ local function GetUnoccupiedSeats()
 	return seats
 end
 
-local function GetHumanoidModelForPlayer(player: Player)
-	local success, rig = pcall(Players.CreateHumanoidModelFromUserId, Players, player.UserId)
-
-	if not success then
-		rig = Players:CreateHumanoidModelFromUserId(1)
-	end
-
-	-- Swap Animate script for Client RunContext one
-	local oldAnimate = rig:FindFirstChild("Animate")
-	local newAnimate = ReplicatedStorage.AnimateScripts[rig.Humanoid.RigType.Name]:Clone()
-
-	for _, v in oldAnimate:GetChildren() do
-		v.Parent = newAnimate
-	end
-
-	oldAnimate:Destroy()
-
-	newAnimate.Name = "Animate"
-	newAnimate.Enabled = true
-	newAnimate.Parent = rig
-
-	return rig
-end
-
 local Player = {}
 Player.__index = Player
 
 function Player.new(player: Player)
 	local self = setmetatable({}, Player)
 
-	self.Player = player
-	self.Random = Random.new()
+	self._player = player
+	self._random = Random.new()
 
 	-- Create character
-	self.Character = GetHumanoidModelForPlayer(player)
-	self.Character.Name = player.Name
-	self.Character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+	self._character = AvatarUtils.getHumanoidModelForUserId(player.UserId)
+	self._character.Name = player.Name
+	self._character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 
 	-- ForceField
 	local forceField = Instance.new("ForceField")
 	forceField.Visible = false
-	forceField.Parent = self.Character
+	forceField.Parent = self._character
 
 	-- Path
-	self.Path = PathfindingService:CreatePath(PATH_CONFIG)
+	self._path = PathfindingService:CreatePath(PATH_CONFIG)
 
 	-- Voice
-	self.VoiceInput = Instance.new("AudioDeviceInput")
-	self.VoiceInput.Player = player
-	self.VoiceInput.Parent = player
+	self._voiceInput = Instance.new("AudioDeviceInput")
+	self._voiceInput.Player = player
+	self._voiceInput.Parent = player
 
-	self.AudioWire = Instance.new("Wire")
-	self.AudioWire.SourceInstance = self.VoiceInput
-	self.AudioWire.Parent = player
+	self._audioWire = Instance.new("Wire")
+	self._audioWire.SourceInstance = self._voiceInput
+	self._audioWire.Parent = player
 
 	-- Find & reserve a seat
 	local seats = GetUnoccupiedSeats()
-	self.Seat = seats[self.Random:NextInteger(1, #seats)]
-	self.Seat:SetAttribute("Reserved", true)
+	self._seat = seats[self._random:NextInteger(1, #seats)]
+	self._seat:SetAttribute("Reserved", true)
 
 	-- Spawn character
-	self.Character.Parent = workspace.Characters
-	self.Character.HumanoidRootPart:SetNetworkOwner(nil)
-	self.Character:PivotTo(workspace.Positions.Spawn.CFrame)
+	self._character.Parent = workspace.Characters
+	self._character.HumanoidRootPart:SetNetworkOwner(nil)
+	self._character:PivotTo(workspace.Positions.Spawn.CFrame)
 
 	-- Walk to seat
-	self:PromisePathfindTo(self.Seat.Position):Finally(function()
+	self:PromisePathfindTo(self._seat.Position):Finally(function()
 		self:EnterSeat()
 	end)
 
@@ -104,17 +79,17 @@ function Player.new(player: Player)
 end
 
 function Player:PromisePathfindTo(finish: Vector3)
-	return PathfindingUtils.promiseComputeAsync(self.Path, self.Character.HumanoidRootPart.Position, finish)
+	return PathfindingUtils.promiseComputeAsync(self._path, self._character.HumanoidRootPart.Position, finish)
 		:Then(function(path)
 			if path.Status ~= Enum.PathStatus.Success then
 				return Promise.rejected(path.Status)
 			end
 
-			self.Character.Humanoid.Sit = false
+			self._character.Humanoid.Sit = false
 
 			for _, waypoint: PathWaypoint in path:GetWaypoints() do
-				self.Character.Humanoid:MoveTo(waypoint.Position)
-				self.Character.Humanoid.MoveToFinished:Wait()
+				self._character.Humanoid:MoveTo(waypoint.Position)
+				self._character.Humanoid.MoveToFinished:Wait()
 			end
 
 			return Promise.resolved(path.Status)
@@ -122,22 +97,22 @@ function Player:PromisePathfindTo(finish: Vector3)
 end
 
 function Player:EnterSeat()
-	self.AudioWire.TargetInstance = nil
-	self.Seat:Sit(self.Character.Humanoid)
+	self._audioWire.TargetInstance = nil
+	self._seat:Sit(self._character.Humanoid)
 end
 
 function Player:EnterStage()
-	self.Character.Humanoid.Sit = false
-	self.Character:PivotTo(workspace.Positions.Stage.CFrame)
-	self.AudioWire.TargetInstance = SoundService.StageAudio
+	self._character.Humanoid.Sit = false
+	self._character:PivotTo(workspace.Positions.Stage.CFrame)
+	self._audioWire.TargetInstance = SoundService.StageAudio
 end
 
 function Player:Destroy()
 	self:PromisePathfindTo(workspace.Positions.Spawn.Position):Finally(function()
-		self.Character:Destroy()
+		self._character:Destroy()
 	end)
 
-	self.Seat:SetAttribute("Reserved", nil)
+	self._seat:SetAttribute("Reserved", nil)
 end
 
 return require("PlayerBinder").new("Player", Player)

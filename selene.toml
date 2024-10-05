@@ -5,7 +5,7 @@ std = "roblox"
 exclude = ["Packages/*", "DevPackages/*", "node_modules/*", "*.spec.lua"]
 
 [lints]
-
+undefined_variable = "allow"
 
 [config]
 
