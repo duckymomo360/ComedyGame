@@ -18,7 +18,7 @@ function AvatarUtils.getHumanoidModelForUserId(userId: number): (Model?, number)
 		end
 
 		success, rig = pcall(Players.CreateHumanoidModelFromUserId, Players, userId)
-		
+
 		if success then
 			break
 		else
