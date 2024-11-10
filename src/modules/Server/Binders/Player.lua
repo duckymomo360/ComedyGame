@@ -120,4 +120,4 @@ function Player:Destroy()
 	self._seat:SetAttribute("Reserved", nil)
 end
 
-return Player
+return require("PlayerBinder").new("Player", Player)
