@@ -5,6 +5,7 @@
 local require = require(script.Parent.loader).load(script)
 
 local Maid = require("Maid")
+local Remoting = require("Remoting")
 
 local ComedyGameService = {}
 ComedyGameService.ServiceName = "ComedyGameService"
@@ -14,7 +15,19 @@ function ComedyGameService:Init(serviceBag)
 	self._serviceBag = assert(serviceBag, "No serviceBag")
 	self._maid = Maid.new()
 
-	self._serviceBag:GetService(require("Player"))
+	self._playerBinder = self._serviceBag:GetService(require("Player"))
+
+	self._remoting = Remoting.new(game.ReplicatedStorage, "Actions")
+
+	self._remoting:Connect("EnterStage", function(player)
+		local pbdr = self._playerBinder:Get(player)
+
+		if pbdr._state == "InSeat" then
+			pbdr:EnterStage()
+		elseif pbdr._state == "OnStage" then
+			pbdr:EnterSeat()
+		end
+	end)
 end
 
 function ComedyGameService:Destroy()

@@ -6,6 +6,7 @@ local SoundService = game:GetService("SoundService")
 local Promise = require("Promise")
 local PathfindingUtils = require("PathfindingUtils")
 local AvatarUtils = require("AvatarUtils")
+local GetUnoccupiedSeats = require("GetUnoccupiedSeats")
 
 local PATH_CONFIG = {
 	AgentCanJump = false,
@@ -16,18 +17,6 @@ local PATH_CONFIG = {
 		Avoid = math.huge,
 	},
 }
-
-local function GetUnoccupiedSeats()
-	local seats = {}
-
-	for _, v in workspace.Tables:GetDescendants() do
-		if v:IsA("Seat") and v:GetAttribute("Reserved") ~= true then
-			table.insert(seats, v)
-		end
-	end
-
-	return seats
-end
 
 local Player = {}
 Player.__index = Player
@@ -70,6 +59,8 @@ function Player.new(player: Player)
 	self._character.HumanoidRootPart:SetNetworkOwner(nil)
 	self._character:PivotTo(workspace.Positions.Spawn.CFrame)
 
+	self._state = "WalkingIn"
+
 	-- Walk to seat
 	self:PromisePathfindTo(self._seat.Position):Finally(function()
 		self:EnterSeat()
@@ -99,10 +90,24 @@ end
 function Player:EnterSeat()
 	self._audioWire.TargetInstance = nil
 	self._seat:Sit(self._character.Humanoid)
+	self._state = "InSeat"
 end
 
 function Player:EnterStage()
+	if self._state ~= "InSeat" then
+		return
+	end
+
+	self._state = "OnStage"
+	
+	local seatWeld = self._seat:FindFirstChild("SeatWeld", true)
+	
+	if seatWeld ~= nil then
+		seatWeld:Destroy()
+	end
+
 	self._character.Humanoid.Sit = false
+	
 	self._character:PivotTo(workspace.Positions.Stage.CFrame)
 	self._audioWire.TargetInstance = SoundService.StageAudio
 end

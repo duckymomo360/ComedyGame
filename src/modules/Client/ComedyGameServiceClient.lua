@@ -4,6 +4,9 @@
 
 local require = require(script.Parent.loader).load(script)
 
+local Maid = require("Maid")
+local Remoting = require("Remoting")
+
 local ComedyGameServiceClient = {}
 ComedyGameServiceClient.ServiceName = "ComedyGameServiceClient"
 
@@ -11,10 +14,18 @@ function ComedyGameServiceClient:Init(serviceBag)
 	assert(not self._serviceBag, "Already initialized")
 	self._serviceBag = assert(serviceBag, "No serviceBag")
 
+	self._maid = Maid.new()
+
 	self._serviceBag:GetService(require("CameraService"))
 	self._serviceBag:GetService(require("SoundboardButton"))
 
 	game:GetService("StarterGui").MainGui:Clone().Parent = game.Players.LocalPlayer.PlayerGui
+
+	self._remoting = Remoting.new(game.ReplicatedStorage, "Actions")
+
+	self._maid:GiveTask(game.Players.LocalPlayer.PlayerGui.MainGui.Frame.Button.MouseButton1Down:Connect(function()
+		self._remoting:FireServer("EnterStage")
+	end))
 end
 
 return ComedyGameServiceClient
