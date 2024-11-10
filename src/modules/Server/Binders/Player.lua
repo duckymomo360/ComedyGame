@@ -21,7 +21,10 @@ local PATH_CONFIG = {
 local Player = {}
 Player.__index = Player
 
-function Player.new(player: Player)
+function Player.new(player: Player, _serviceBag)
+
+	print(_serviceBag)
+	
 	local self = setmetatable({}, Player)
 
 	self._player = player
@@ -120,4 +123,4 @@ function Player:Destroy()
 	self._seat:SetAttribute("Reserved", nil)
 end
 
-return require("PlayerBinder").new("Player", Player)
+return Player

@@ -15,8 +15,7 @@ function ComedyGameService:Init(serviceBag)
 	self._serviceBag = assert(serviceBag, "No serviceBag")
 	self._maid = Maid.new()
 
-	self._playerBinder = self._serviceBag:GetService(require("Player"))
-
+	self._binders = self._serviceBag:GetService(require("ServerBinders"))
 	self._remoting = Remoting.new(game.ReplicatedStorage, "Actions")
 
 	self._remoting:Connect("EnterStage", function(player)

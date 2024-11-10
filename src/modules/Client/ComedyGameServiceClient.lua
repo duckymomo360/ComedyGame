@@ -16,8 +16,8 @@ function ComedyGameServiceClient:Init(serviceBag)
 
 	self._maid = Maid.new()
 
-	self._serviceBag:GetService(require("CameraService"))
-	self._serviceBag:GetService(require("SoundboardButton"))
+	self._binders = self._serviceBag:GetService(require("ClientBinders"))
+	self._cameraService = self._serviceBag:GetService(require("CameraService"))
 
 	game:GetService("StarterGui").MainGui:Clone().Parent = game.Players.LocalPlayer.PlayerGui
 

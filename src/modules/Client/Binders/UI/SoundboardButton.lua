@@ -11,7 +11,7 @@ local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local Button = {}
 Button.__index = Button
 
-function Button.new(gui)
+function Button.new(gui, _serviceBag)
 	local self = setmetatable({}, Button)
 	self._maid = require("Maid").new()
 
@@ -65,6 +65,8 @@ function Button.new(gui)
 	return self
 end
 
-function Button:Destroy() end
+function Button:Destroy()
 
-return require("Binder").new("SoundboardButton", Button)
+end
+
+return Button

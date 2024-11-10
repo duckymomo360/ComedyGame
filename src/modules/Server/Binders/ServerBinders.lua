@@ -1,8 +1,8 @@
 local require = require(script.Parent.loader).load(script)
 
 local BinderProvider = require("BinderProvider")
-local Binder = require("Binder")
+local PlayerBinder = require("PlayerBinder")
 
 return BinderProvider.new("ServerBinders", function(self, serviceBag)
-	self:Add(Binder.new("Player", require("Player"), serviceBag))
+	self:Add(PlayerBinder.new("Player", require("Player"), serviceBag))
 end)
