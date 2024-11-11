@@ -19,7 +19,7 @@ function ComedyGameService:Init(serviceBag)
 	self._remoting = Remoting.new(game.ReplicatedStorage, "Actions")
 
 	self._remoting:Connect("EnterStage", function(player)
-		local pbdr = self._playerBinder:Get(player)
+		local pbdr = self._binders:Get("Player"):Get(player)
 
 		if pbdr._state == "InSeat" then
 			pbdr:EnterStage()
