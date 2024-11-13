@@ -77,10 +77,9 @@ end
 	@param target Vector3?
 ]=]
 function Player:SetRigTarget(target: Vector3)
-	self._serviceBag:GetService(IKService):PromiseRig(self._character.Humanoid)
-		:Then(function(ikRig)
-			ikRig:SetRigTarget(target)
-		end)
+	self._serviceBag:GetService(IKService):PromiseRig(self._character.Humanoid):Then(function(ikRig)
+		ikRig:SetRigTarget(target)
+	end)
 end
 
 function Player:PromisePathfindTo(finish: Vector3)
@@ -115,15 +114,15 @@ function Player:EnterStage()
 	end
 
 	self._state = "OnStage"
-	
+
 	local seatWeld = self._seat:FindFirstChild("SeatWeld", true)
-	
+
 	if seatWeld ~= nil then
 		seatWeld:Destroy()
 	end
 
 	self._character.Humanoid.Sit = false
-	
+
 	self._character:PivotTo(workspace.Positions.Stage.CFrame)
 	self._audioWire.TargetInstance = SoundService.StageAudio
 

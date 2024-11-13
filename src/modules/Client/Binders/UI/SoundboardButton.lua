@@ -65,8 +65,6 @@ function Button.new(gui, _serviceBag)
 	return self
 end
 
-function Button:Destroy()
-
-end
+function Button:Destroy() end
 
 return Button
