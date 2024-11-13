@@ -15,7 +15,8 @@ function ComedyGameServiceClient:Init(serviceBag)
 	self._serviceBag = assert(serviceBag, "No serviceBag")
 	
 	self._serviceBag:GetService(require("CmdrServiceClient"))
-
+	self._serviceBag:GetService(require("IKServiceClient"))
+	
 	self._maid = Maid.new()
 
 	self._binders = self._serviceBag:GetService(require("ClientBinders"))

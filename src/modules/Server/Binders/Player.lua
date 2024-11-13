@@ -7,6 +7,7 @@ local Promise = require("Promise")
 local PathfindingUtils = require("PathfindingUtils")
 local AvatarUtils = require("AvatarUtils")
 local GetUnoccupiedSeats = require("GetUnoccupiedSeats")
+local IKService = require("IKService")
 
 local PATH_CONFIG = {
 	AgentCanJump = false,
@@ -21,11 +22,9 @@ local PATH_CONFIG = {
 local Player = {}
 Player.__index = Player
 
-function Player.new(player: Player, _serviceBag)
-
-	print(_serviceBag)
-	
+function Player.new(player: Player, serviceBag)
 	local self = setmetatable({}, Player)
+	self._serviceBag = assert(serviceBag, "No serviceBag")
 
 	self._player = player
 	self._random = Random.new()
@@ -72,6 +71,18 @@ function Player.new(player: Player, _serviceBag)
 	return self
 end
 
+--[=[
+	Sets the IK Rig target and replicates it to the client
+
+	@param target Vector3?
+]=]
+function Player:SetRigTarget(target: Vector3)
+	self._serviceBag:GetService(IKService):PromiseRig(self._character.Humanoid)
+		:Then(function(ikRig)
+			ikRig:SetRigTarget(target)
+		end)
+end
+
 function Player:PromisePathfindTo(finish: Vector3)
 	return PathfindingUtils.promiseComputeAsync(self._path, self._character.HumanoidRootPart.Position, finish)
 		:Then(function(path)
@@ -94,6 +105,8 @@ function Player:EnterSeat()
 	self._audioWire.TargetInstance = nil
 	self._seat:Sit(self._character.Humanoid)
 	self._state = "InSeat"
+
+	self:SetRigTarget(workspace.Positions.Stage.Position)
 end
 
 function Player:EnterStage()
@@ -113,6 +126,9 @@ function Player:EnterStage()
 	
 	self._character:PivotTo(workspace.Positions.Stage.CFrame)
 	self._audioWire.TargetInstance = SoundService.StageAudio
+
+	-- TODO: Make player look at mouse while on stage
+	self:SetRigTarget(workspace.Positions.Camera.Position)
 end
 
 function Player:Destroy()
