@@ -17,6 +17,8 @@ function ComedyGameService:Init(serviceBag)
 
 	self._serviceBag:GetService(require("CmdrService"))
 	self._serviceBag:GetService(require("IKService"))
+	self._serviceBag:GetService(require("LobbyService"))
+
 	self._binders = self._serviceBag:GetService(require("ServerBinders"))
 	self._remoting = Remoting.new(game.ReplicatedStorage, "Actions")
 

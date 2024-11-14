@@ -17,6 +17,7 @@
     "@quenty/ik": "^15.17.0",
     "@quenty/loader": "^10.5.0",
     "@quenty/maid": "^3.3.0",
+    "@quenty/messagingserviceutils": "^7.8.0",
     "@quenty/pathfindingutils": "^10.5.0",
     "@quenty/playerbinder": "^14.8.0",
     "@quenty/promise": "^10.5.0",
