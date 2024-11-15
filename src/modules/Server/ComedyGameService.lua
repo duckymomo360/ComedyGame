@@ -15,14 +15,16 @@ function ComedyGameService:Init(serviceBag)
 	self._serviceBag = assert(serviceBag, "No serviceBag")
 	self._maid = Maid.new()
 
+	-- External Dependencies
 	self._serviceBag:GetService(require("CmdrService"))
 	self._serviceBag:GetService(require("IKService"))
-	self._serviceBag:GetService(require("LobbyService"))
 
+	-- Internal Dependencies
+	self._lobbyService = self._serviceBag:GetService(require("LobbyService"))
 	self._binders = self._serviceBag:GetService(require("ServerBinders"))
-	self._remoting = Remoting.new(game.ReplicatedStorage, "Actions")
 
-	self._remoting:Connect("EnterStage", function(player)
+	-- TODO
+	Remoting.new(game.ReplicatedStorage, "Actions"):Connect("EnterStage", function(player)
 		local pbdr = self._binders:Get("Player"):Get(player)
 
 		if pbdr._state == "InSeat" then
@@ -31,10 +33,6 @@ function ComedyGameService:Init(serviceBag)
 			pbdr:EnterSeat()
 		end
 	end)
-end
-
-function ComedyGameService:Destroy()
-	self._maid:DoCleaning()
 end
 
 return ComedyGameService

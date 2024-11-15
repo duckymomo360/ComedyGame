@@ -1,118 +1,114 @@
 local require = require(script.Parent.loader).load(script)
 
-local Maid = require("Maid")
-local MessagingServiceUtils = require("MessagingServiceUtils")
-local HttpService = game:GetService("HttpService")
 local MemoryStoreService = game:GetService("MemoryStoreService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+local Maid = require("Maid")
 
-local LOBBY_INFO_PUBLISH_INTERVAL = 30
-local LOBBY_INFO_EXPIRE_TIME = 60
+local LobbiesMap = MemoryStoreService:GetSortedMap("Lobbies")
+local PlayerCurrentLobbyMap = MemoryStoreService:GetHashMap("PlayerCurrentLobby")
+
+local LOBBY_PLACEID = 91745465506672
+
+type LobbyState = {
+	Players: { number },
+	ServerAge: number,
+}
+
+type LobbyInfo = {
+	Name: string,
+	Host: number,
+	AccessCode: string?,
+	LobbyState: LobbyState?,
+}
 
 local LobbyService = {}
 LobbyService.ServiceName = "LobbyService"
 
-type LobbyInfoPublishRequest = {
-	targetLobbyId: number,
-	sender: number,
-}
-
-type PlayerInfo = {
-	UserId: number,
-	SessionTime: number,
-}
-
-type LobbyInfo = {
-	JobId: string,
-	Name: string,
-	Age: number,
-	Host: number,
-	Players: { PlayerInfo },
-}
-
-function LobbyService:Init(_serviceBag)
+function LobbyService:Init(serviceBag)
+	assert(not self._serviceBag, "Already initialized")
+	self._serviceBag = assert(serviceBag, "No serviceBag")
 	self._maid = Maid.new()
 
-	self._lobbyId = HttpService:GenerateGUID(false)
-	self._lobbies = MemoryStoreService:GetSortedMap("Lobbies")
+	if self:IsInLobby() then
+		self:_startupLocalLobby()
+	end
+end
 
-	-- Assign server host
-	self:AssignNewHost()
+function LobbyService:IsInLobby()
+	return game.PlaceId == LOBBY_PLACEID
+end
 
-	self._maid:GiveTask(Players.PlayerAdded:Connect(function()
-		if self._host == nil then
-			self:AssignNewHost()
-		end
-	end))
+function LobbyService:_publishLocalLobbyInfo()
+	assert(self:IsInLobby(), "This server is not a lobby")
 
-	-- When the host leaves, assign a new host
-	self._maid:GiveTask(Players.PlayerRemoving:Connect(function(player)
-		if player == self._host then
-			self:AssignNewHost()
-		end
-	end))
+	self._lobbyInfo.LobbyState = {}
+	self._lobbyInfo.LobbyState.ServerAge = workspace.DistributedGameTime
+	self._lobbyInfo.LobbyState.Players = {}
 
-	-- Handle requests from MessagingService to refresh lobby info
-	MessagingServiceUtils.promiseSubscribe("LobbyInfoPublishRequest", function(message: LobbyInfoPublishRequest)
-		if message.targetLobbyId == self._lobbyId then
-			self:PublishLobbyInfo()
-		end
-	end):Then(function(connection)
-		self._maid:GiveTask(connection)
-	end)
+	for _, player in Players:GetPlayers() do
+		table.insert(self._lobbyInfo.LobbyState.Players, player.UserId)
+	end
 
-	-- Lobby info update clock
-	self._maid:GiveTask(task.spawn(function()
+	LobbiesMap:SetAsync(self._serverId, self._lobbyInfo, 60, #self._lobbyInfo.LobbyState.Players)
+
+	print("Lobby info published")
+end
+
+function LobbyService:_startupLocalLobby()
+	assert(self:IsInLobby(), "This server is not a lobby")
+	assert(not self._gameService, "Lobby already registered")
+
+	self._serverId = if RunService:IsStudio() then "STUDIO" else game.PrivateServerId
+	self._gameService = self._serviceBag:GetService(require("ComedyGameService"))
+
+	local publishThread = task.spawn(function()
+		self._lobbyInfo = LobbiesMap:GetAsync(self._serverId)
+
 		while true do
-			task.wait(LOBBY_INFO_PUBLISH_INTERVAL)
-			self:PublishLobbyInfo()
+			self:_publishLocalLobbyInfo()
+			task.wait(30)
 		end
-	end))
-
-	self._maid:GiveTask(function()
-		self._lobbies:RemoveAsync(self._lobbyId)
 	end)
 
 	game:BindToClose(function()
-		self._maid:Destroy()
+		task.cancel(publishThread)
+		LobbiesMap:RemoveAsync(self._serverId)
 	end)
+
+	self._maid:GiveTask(Players.PlayerAdded:Connect(function(player)
+		PlayerCurrentLobbyMap:SetAsync(tostring(player.UserId), self._serverId, 60 * 60 * 24)
+	end))
+
+	self._maid:GiveTask(Players.PlayerRemoving:Connect(function(player)
+		PlayerCurrentLobbyMap:RemoveAsync(tostring(player.UserId))
+	end))
 end
 
-function LobbyService:AssignNewHost(): Player
-	local host: Player = Players:GetPlayers()[1]
-	if host ~= nil then
-		self._host = host
-		self:PublishLobbyInfo()
-		return host
-	end
+function LobbyService:CreateNewLobby(lobbyInfo: LobbyInfo)
+	local accessCode, privateServerId = TeleportService:ReserveServer(LOBBY_PLACEID)
+	lobbyInfo.AccessCode = accessCode
+
+	LobbiesMap:SetAsync(privateServerId, lobbyInfo, 120, 1)
+
+	local teleportOptions = Instance.new("TeleportOptions")
+	teleportOptions.ReservedServerAccessCode = accessCode
+
+	TeleportService:TeleportAsync(LOBBY_PLACEID, { Players:GetPlayerByUserId(lobbyInfo.Host) }, teleportOptions)
 end
 
-function LobbyService:_compileLobbyInfo(): LobbyInfo
-	local lobbyInfo: LobbyInfo = {
-		JobId = game.JobId,
-		Name = self._lobbyName,
-		HostUserId = if self._host then self._host.UserId else nil,
-		Age = workspace.DistributedGameTime,
-		Players = {},
-	}
+function LobbyService:TeleportPlayerToLobby(player: Player, serverId: string)
+	local lobbyInfo = LobbiesMap:GetAsync(serverId) :: LobbyInfo
 
-	for _, player: Player in Players:GetPlayers() do
-		local playerInfo: PlayerInfo = {
-			UserId = player.UserId,
-			SessionTime = 1,
-		}
+	local teleportOptions = Instance.new("TeleportOptions")
+	teleportOptions.ReservedServerAccessCode = lobbyInfo.AccessCode
 
-		table.insert(lobbyInfo.Players, playerInfo)
-	end
-
-	return lobbyInfo
+	TeleportService:TeleportAsync(LOBBY_PLACEID, { player }, teleportOptions)
 end
 
-function LobbyService:PublishLobbyInfo()
-	local lobbyInfo = self:_compileLobbyInfo()
-	local numPlayers = #lobbyInfo.Players
-	print("Lobby Info", lobbyInfo)
-	self._lobbies:SetAsync(self._lobbyId, lobbyInfo, LOBBY_INFO_EXPIRE_TIME, numPlayers)
+function LobbyService:FindLobbyContainingUserId(userId: number)
+	return PlayerCurrentLobbyMap:GetAsync(tostring(userId))
 end
 
 function LobbyService:Destroy()
