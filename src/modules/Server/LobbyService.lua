@@ -11,6 +11,11 @@ local PlayerCurrentLobbyMap = MemoryStoreService:GetHashMap("PlayerCurrentLobby"
 
 local LOBBY_PLACEID = 91745465506672
 
+local STUDIO_LOBBY_INFO: LobbyInfo = {
+	Name = "Studio Lobby",
+	Host = 0,
+}
+
 type LobbyState = {
 	Players: { number },
 	ServerAge: number,
@@ -40,6 +45,18 @@ function LobbyService:IsInLobby()
 	return game.PlaceId == LOBBY_PLACEID
 end
 
+function LobbyService:ShutdownServer(reason: string)
+	reason = reason or "Server shutting down"
+
+	Players.PlayerAdded:Connect(function(player)
+		player:Kick(reason)
+	end)
+
+	for _, player in Players:GetPlayers() do
+		player:Kick(reason)
+	end
+end
+
 function LobbyService:_publishLocalLobbyInfo()
 	assert(self:IsInLobby(), "This server is not a lobby")
 
@@ -64,7 +81,20 @@ function LobbyService:_startupLocalLobby()
 	self._gameService = self._serviceBag:GetService(require("ComedyGameService"))
 
 	local publishThread = task.spawn(function()
+		-- When running in Studio, use the default Studio lobby config
+		if RunService:IsStudio() then
+			self._lobbyInfo = STUDIO_LOBBY_INFO
+			return
+		end
+
+		-- Get the lobbyInfo that the main menu set up before teleporting here
 		self._lobbyInfo = LobbiesMap:GetAsync(self._serverId)
+
+		-- lobbyInfo is nil either when in Studio or when the main menu didn't set it up corrently
+		if self._lobbyInfo == nil then
+			self:ShutdownServer("Failed to start server")
+			return
+		end
 
 		while true do
 			self:_publishLocalLobbyInfo()
