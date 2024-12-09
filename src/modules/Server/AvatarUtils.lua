@@ -33,17 +33,22 @@ function AvatarUtils.getHumanoidModelForUserId(userId: number): (Model?, number)
 
 	-- Swap Animate script for Client RunContext one
 	local oldAnimate = rig:FindFirstChild("Animate")
-	local newAnimate = ReplicatedStorage.AnimateScripts[rig.Humanoid.RigType.Name]:Clone()
+	local newAnimate = ReplicatedStorage.AnimateScripts:FindFirstChild(rig.Humanoid.RigType.Name)
 
-	for _, v in oldAnimate:GetChildren() do
-		v.Parent = newAnimate
+	if newAnimate ~= nil then
+		newAnimate = newAnimate:Clone()
+
+		-- Copy any custom animations they may have equipped
+		for _, v in oldAnimate:GetChildren() do
+			v.Parent = newAnimate
+		end
+
+		newAnimate.Name = "Animate"
+		newAnimate.Enabled = true
+		newAnimate.Parent = rig
 	end
 
 	oldAnimate:Destroy()
-
-	newAnimate.Name = "Animate"
-	newAnimate.Enabled = true
-	newAnimate.Parent = rig
 
 	return rig, userId
 end

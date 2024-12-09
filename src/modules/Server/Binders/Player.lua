@@ -77,6 +77,11 @@ end
 	@param target Vector3?
 ]=]
 function Player:SetRigTarget(target: Vector3)
+	-- IKService only works with R15
+	if self._character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
+		return
+	end
+
 	self._serviceBag:GetService(IKService):PromiseRig(self._character.Humanoid):Then(function(ikRig)
 		ikRig:SetRigTarget(target)
 	end)
