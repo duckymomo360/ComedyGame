@@ -96,12 +96,12 @@ end
 
 function LobbyService:_startupLocalLobby()
 	assert(self:IsInLobby(), "This server is not a lobby")
-	assert(not self._gameService, "Lobby already registered")
+	assert(not self._registered, "Lobby already registered")
 
+	self._registered = true
 	self._serverId = if RunService:IsStudio() then "STUDIO" else game.PrivateServerId
-	self._gameService = self._serviceBag:GetService(require("ComedyGameService"))
 
-	local publishThread = self._maid:Add(task.spawn(function()
+	self._maid:Add(task.spawn(function()
 		-- When running in Studio, use the default Studio lobby config
 		if RunService:IsStudio() then
 			self._lobbyInfo = STUDIO_LOBBY_INFO
