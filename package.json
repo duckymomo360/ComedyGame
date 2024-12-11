@@ -22,6 +22,7 @@
     "@quenty/playerbinder": "^14.8.0",
     "@quenty/promise": "^10.5.0",
     "@quenty/ragdoll": "^15.10.0",
+    "@quenty/randomutils": "^6.8.0",
     "@quenty/servicebag": "^11.7.0",
     "@quenty/signal": "^7.7.0"
   },

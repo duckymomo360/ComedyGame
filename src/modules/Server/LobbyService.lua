@@ -4,7 +4,10 @@ local MemoryStoreService = game:GetService("MemoryStoreService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TeleportService = game:GetService("TeleportService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local Maid = require("Maid")
+local Remoting = require("Remoting")
 
 local LobbiesMap = MemoryStoreService:GetSortedMap("Lobbies")
 local PlayerCurrentLobbyMap = MemoryStoreService:GetHashMap("PlayerCurrentLobby")
@@ -35,6 +38,24 @@ function LobbyService:Init(serviceBag)
 	assert(not self._serviceBag, "Already initialized")
 	self._serviceBag = assert(serviceBag, "No serviceBag")
 	self._maid = Maid.new()
+
+	self._remoting = Remoting.new(ReplicatedStorage, "LobbyService")
+	self._remoting:Bind("GetLobbies", function()
+		local data = LobbiesMap:GetRangeAsync(Enum.SortDirection.Descending, 10)
+		local lobbies = {}
+		for _, v in data do
+			-- manually inject serverId which is the key so client can access it
+			v.value.serverId = v.key
+
+			table.insert(lobbies, v.value)
+		end
+
+		return lobbies
+	end)
+
+	self._remoting:Connect("JoinLobby", function(player, serverId)
+		self:TeleportPlayerToLobby(player, serverId)
+	end)
 
 	if self:IsInLobby() then
 		self:_startupLocalLobby()
