@@ -19,12 +19,12 @@ local STUDIO_LOBBY_INFO: LobbyInfo = {
 	Host = 0,
 }
 
-type LobbyState = {
+export type LobbyState = {
 	Players: { number },
 	ServerAge: number,
 }
 
-type LobbyInfo = {
+export type LobbyInfo = {
 	Name: string,
 	Host: number,
 	AccessCode: string?,
@@ -101,7 +101,7 @@ function LobbyService:_startupLocalLobby()
 	self._serverId = if RunService:IsStudio() then "STUDIO" else game.PrivateServerId
 	self._gameService = self._serviceBag:GetService(require("ComedyGameService"))
 
-	local publishThread = task.spawn(function()
+	local publishThread = self._maid:Add(task.spawn(function()
 		-- When running in Studio, use the default Studio lobby config
 		if RunService:IsStudio() then
 			self._lobbyInfo = STUDIO_LOBBY_INFO
@@ -121,10 +121,9 @@ function LobbyService:_startupLocalLobby()
 			self:_publishLocalLobbyInfo()
 			task.wait(30)
 		end
-	end)
+	end))
 
-	game:BindToClose(function()
-		task.cancel(publishThread)
+	self._maid:Add(function()
 		LobbiesMap:RemoveAsync(self._serverId)
 	end)
 
@@ -135,6 +134,10 @@ function LobbyService:_startupLocalLobby()
 	self._maid:GiveTask(Players.PlayerRemoving:Connect(function(player)
 		PlayerCurrentLobbyMap:RemoveAsync(tostring(player.UserId))
 	end))
+
+	game:BindToClose(function()
+		self._maid:Destroy()
+	end)
 end
 
 function LobbyService:CreateNewLobby(lobbyInfo: LobbyInfo)
