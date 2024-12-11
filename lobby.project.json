@@ -1,0 +1,35 @@
+{
+  "name": "Lobby",
+  "globIgnorePaths": [ "**/.package-lock.json" ],
+  "servePort": 34872,
+  "servePlaceIds": [91745465506672],
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "ComedyGame": {
+        "$className": "Folder",
+        "game": {
+          "$path": "src/modules"
+        },
+        "node_modules": {
+          "$path": "node_modules"
+        }
+      },
+      "ComedyGameScripts": {
+        "$path": "src/scripts/Lobby/Server"
+      }
+    },
+    "ReplicatedStorage": {
+      "Packages": {
+        "$path": "Packages"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "ComedyGameScripts": {
+          "$path": "src/scripts/Lobby/Client"
+        }
+      }
+    }
+  }
+}

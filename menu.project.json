@@ -1,6 +1,8 @@
 {
-  "name": "ComedyGame",
+  "name": "Menu",
   "globIgnorePaths": [ "**/.package-lock.json" ],
+  "servePort": 34873,
+  "servePlaceIds": [81078264497609],
   "tree": {
     "$className": "DataModel",
     "ServerScriptService": {
@@ -14,7 +16,7 @@
         }
       },
       "ComedyGameScripts": {
-        "$path": "src/scripts/Server"
+        "$path": "src/scripts/Menu/Server"
       }
     },
     "ReplicatedStorage": {
@@ -25,7 +27,7 @@
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "ComedyGameScripts": {
-          "$path": "src/scripts/Client"
+          "$path": "src/scripts/Menu/Client"
         }
       }
     }
