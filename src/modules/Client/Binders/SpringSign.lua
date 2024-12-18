@@ -1,6 +1,7 @@
 local RunService = game:GetService("RunService")
 local require = require(script.Parent.loader).load(script)
 
+local Binder = require("Binder")
 local Maid = require("Maid")
 local Spring = require("Spring")
 local Signal = require("Signal")
@@ -10,7 +11,7 @@ local BLACK = Color3.new(0, 0, 0)
 local SpringSign = {}
 SpringSign.__index = SpringSign
 
-function SpringSign.new(sign)
+function SpringSign.new(sign, _serviceBag)
 	assert(sign.PrimaryPart, "SpringSign needs a PrimaryPart")
 
 	local self = setmetatable({}, SpringSign)
@@ -84,4 +85,4 @@ function SpringSign:Destroy()
 	self._maid:Destroy()
 end
 
-return SpringSign
+return Binder.new("SpringSign", SpringSign)

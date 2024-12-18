@@ -3,6 +3,7 @@ local require = require(script.Parent.loader).load(script)
 local PathfindingService = game:GetService("PathfindingService")
 local SoundService = game:GetService("SoundService")
 
+local PlayerBinder = require("PlayerBinder")
 local Promise = require("Promise")
 local PathfindingUtils = require("PathfindingUtils")
 local AvatarUtils = require("AvatarUtils")
@@ -23,6 +24,8 @@ local Player = {}
 Player.__index = Player
 
 function Player.new(player: Player, serviceBag)
+	print("isServiceBag: ", require("ServiceBag").isServiceBag(serviceBag))
+
 	local self = setmetatable({}, Player)
 	self._serviceBag = assert(serviceBag, "No serviceBag")
 
@@ -143,4 +146,4 @@ function Player:Destroy()
 	self._seat:SetAttribute("Reserved", nil)
 end
 
-return Player
+return PlayerBinder.new("Player", Player)

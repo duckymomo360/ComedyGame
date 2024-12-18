@@ -8,7 +8,7 @@ local ReactRoblox = require(ReplicatedStorage.Packages.ReactRoblox)
 
 local serviceBag = require("ServiceBag").new()
 
-local binders = serviceBag:GetService(require("ClientBinders"))
+local binders = serviceBag:GetService(require("ClientBinderProvider"))
 serviceBag:GetService(require("SignController"))
 serviceBag:GetService(require("Weather"))
 

@@ -4,17 +4,14 @@ local UserInputService = game:GetService("UserInputService")
 local require = require(script.Parent.loader).load(script)
 
 local Maid = require("Maid")
-local ClientBinders = require("ClientBinders")
 local BinderUtils = require("BinderUtils")
+local SpringSign = require("SpringSign")
 
 local SignController = {}
 SignController.ServiceName = "SignController"
 
-function SignController:Init(serviceBag)
+function SignController:Init(_serviceBag)
 	self._maid = Maid.new()
-
-	self._binders = serviceBag:GetService(ClientBinders)
-	self._springSign = self._binders:Get("SpringSign")
 
 	local mouseLocationLastFrame = Vector2.zero
 	local mouseDelta = Vector2.zero
@@ -58,7 +55,7 @@ function SignController:RaycastForSign(screenX, screenY)
 	local result = workspace:Raycast(ray.Origin, ray.Direction * 100, raycastParams)
 
 	if result then
-		return BinderUtils.findFirstAncestor(self._springSign, result.Instance), result.Position
+		return BinderUtils.findFirstAncestor(SpringSign, result.Instance), result.Position
 	end
 end
 

@@ -5,7 +5,7 @@ local require = require(loader).bootstrapGame(loader.Parent)
 
 local serviceBag = require("ServiceBag").new()
 
-serviceBag:GetService(require("ClientBinders"))
+serviceBag:GetService(require("ClientBinderProvider"))
 serviceBag:GetService(require("CameraService"))
 serviceBag:GetService(require("SignController"))
 serviceBag:GetService(require("ComedyGameServiceClient"))
