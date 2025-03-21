@@ -5,13 +5,14 @@ local require = require(script.Parent.loader).load(script)
 
 local Maid = require("Maid")
 local BinderUtils = require("BinderUtils")
-local SpringSign = require("SpringSign")
 
 local SignController = {}
 SignController.ServiceName = "SignController"
 
 function SignController:Init(_serviceBag)
 	self._maid = Maid.new()
+
+	self._binderProvider = _serviceBag:GetService(require("ClientBinderProvider"))
 
 	local mouseLocationLastFrame = Vector2.zero
 	local mouseDelta = Vector2.zero
@@ -55,7 +56,7 @@ function SignController:RaycastForSign(screenX, screenY)
 	local result = workspace:Raycast(ray.Origin, ray.Direction * 100, raycastParams)
 
 	if result then
-		return BinderUtils.findFirstAncestor(SpringSign, result.Instance), result.Position
+		return BinderUtils.findFirstAncestor(self._binderProvider:Get("SpringSign"), result.Instance), result.Position
 	end
 end
 

@@ -1,7 +1,6 @@
 local RunService = game:GetService("RunService")
 local require = require(script.Parent.loader).load(script)
 
-local Binder = require("Binder")
 local Maid = require("Maid")
 local Spring = require("Spring")
 local Signal = require("Signal")
@@ -85,4 +84,4 @@ function SpringSign:Destroy()
 	self._maid:Destroy()
 end
 
-return Binder.new("SpringSign", SpringSign)
+return SpringSign

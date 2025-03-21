@@ -6,7 +6,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local require = require(script.Parent.loader).load(script)
 
-local Binder = require("Binder")
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
 
 local Button = {}
@@ -68,4 +67,4 @@ end
 
 function Button:Destroy() end
 
-return Binder.new("SoundboardButton", Button)
+return Button
