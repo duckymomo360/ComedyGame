@@ -17,8 +17,8 @@ function SpringSign.new(sign, _serviceBag)
 
 	self._maid = Maid.new()
 
-	self.model = sign
-	self.activated = self._maid:Add(Signal.new())
+	self.Model = sign
+	self.Activated = self._maid:Add(Signal.new())
 
 	-- Save neon part colors
 	self._neonPartColor = {}
@@ -28,7 +28,7 @@ function SpringSign.new(sign, _serviceBag)
 		end
 	end
 
-	self._maid:Add(sign.DescendantAdded:Connect(function(v)
+	self._maid:GiveTask(sign.DescendantAdded:Connect(function(v)
 		if v:IsA("BasePart") and v.Material == Enum.Material.Neon then
 			self._neonPartColor[v] = v.Color
 		end
@@ -40,9 +40,9 @@ function SpringSign.new(sign, _serviceBag)
 
 	self._originalRotation = sign:GetPivot().Rotation
 
-	self.brightness = 1
+	self.Brightness = 1
 
-	self._maid:Add(RunService.RenderStepped:Connect(function()
+	self._maid:GiveTask(RunService.RenderStepped:Connect(function()
 		local rotation = self._rotSpring.Position
 
 		local s = math.sign(rotation.y)
@@ -58,7 +58,7 @@ function SpringSign.new(sign, _serviceBag)
 		)
 
 		for i, v in self._neonPartColor do
-			i.Color = BLACK:Lerp(v, self.brightness)
+			i.Color = BLACK:Lerp(v, self.Brightness)
 		end
 	end))
 
@@ -69,11 +69,11 @@ function SpringSign:_onGlassBumped() end
 
 function SpringSign:Activate(clickPosition: Vector3?)
 	if clickPosition then
-		local clickRelative = self.model.PrimaryPart.CFrame:PointToObjectSpace(clickPosition)
+		local clickRelative = self.Model.PrimaryPart.CFrame:PointToObjectSpace(clickPosition)
 		self:Impulse(Vector3.new(-clickRelative.Y / 2, 2, 0))
 	end
 
-	self.activated:Fire()
+	self.Activated:Fire()
 end
 
 function SpringSign:Impulse(velocity: Vector3)

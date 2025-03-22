@@ -23,7 +23,7 @@ local root = ReactRoblox.createRoot(gui)
 root:render(React.createElement(require("ServerBrowser"), {}, {}))
 
 binders:Get("SpringSign"):Promise(workspace:WaitForChild("Signs"):WaitForChild("Host")):Then(function(sign)
-	sign.activated:Connect(function()
+	sign.Activated:Connect(function()
 		game.ReplicatedStorage.RemoteEvent:FireServer()
 	end)
 end)
