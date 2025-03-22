@@ -26,6 +26,8 @@ function Player.new(player: Player, serviceBag)
 	local self = setmetatable({}, Player)
 	self._serviceBag = assert(serviceBag, "No serviceBag")
 
+	self._binderProvider = self._serviceBag:GetService(require("ServerBinderProvider"))
+
 	self._player = player
 	self._random = Random.new()
 
@@ -66,6 +68,10 @@ function Player.new(player: Player, serviceBag)
 	-- Walk to seat
 	self:PromisePathfindTo(self._seat.Position):Finally(function()
 		self:EnterSeat()
+	end)
+
+	task.delay(1, function()
+		self._binderProvider:Get("Door"):Get(workspace.Walls.Door.Door):Impulse(5)
 	end)
 
 	return self
