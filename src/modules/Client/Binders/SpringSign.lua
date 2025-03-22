@@ -45,8 +45,8 @@ function SpringSign.new(sign, _serviceBag)
 	self._maid:GiveTask(RunService.RenderStepped:Connect(function()
 		local rotation = self._rotSpring.Position
 
-		local s = math.sign(rotation.y)
-		if s ~= self._currentS and math.abs(rotation.y) > 0.05 then
+		local s = math.sign(rotation.Y)
+		if s ~= self._currentS and math.abs(rotation.Y) > 0.05 then
 			self:_onGlassBumped()
 			self._currentS = s
 		end
@@ -54,7 +54,7 @@ function SpringSign.new(sign, _serviceBag)
 		sign:PivotTo(
 			CFrame.new(sign:GetPivot().Position)
 				* self._originalRotation
-				* CFrame.Angles(rotation.x, math.abs(rotation.y), rotation.z)
+				* CFrame.Angles(rotation.X, math.abs(rotation.Y), rotation.Z)
 		)
 
 		for i, v in self._neonPartColor do
