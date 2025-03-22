@@ -9,10 +9,10 @@ local BinderUtils = require("BinderUtils")
 local SignController = {}
 SignController.ServiceName = "SignController"
 
-function SignController:Init(_serviceBag)
+function SignController:Init(serviceBag)
 	self._maid = Maid.new()
 
-	self._binderProvider = _serviceBag:GetService(require("ClientBinderProvider"))
+	self._binderProvider = serviceBag:GetService(require("ClientBinderProvider"))
 
 	local mouseLocationLastFrame = Vector2.zero
 	local mouseDelta = Vector2.zero
